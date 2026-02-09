@@ -1,0 +1,603 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SDH Compact Status</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 6px;
+      background: transparent;
+      font-family: 'Cinzel', 'Pretendard', 'Noto Sans KR', sans-serif;
+      color: #e0e0e0;
+    }
+
+    .compact-status {
+      max-width: 560px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 1px solid #c9a45c;
+      border-radius: 6px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+      overflow: hidden;
+    }
+
+    .summary-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 12px;
+      cursor: pointer;
+      font-size: 0.92em;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(201, 164, 92, 0.2);
+    }
+
+    .summary-main {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+
+    .summary-main span {
+      white-space: nowrap;
+    }
+
+    .summary-name {
+      color: #ffffff;
+      font-weight: 700;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .summary-lv {
+      color: #7dcfff;
+      font-weight: 700;
+    }
+
+    .summary-sdp {
+      color: #ffd700;
+      font-weight: 700;
+    }
+
+    .summary-arrow {
+      color: #c9a45c;
+      font-size: 0.9em;
+      flex-shrink: 0;
+    }
+
+    .panel {
+      display: none;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.22);
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .tab-pane {
+      display: none;
+      min-height: 120px;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .section-title {
+      color: #c9a45c;
+      font-size: 0.84em;
+      margin: 0 0 6px 0;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .detail-box {
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px solid rgba(201, 164, 92, 0.2);
+      border-radius: 4px;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.84em;
+      margin-bottom: 4px;
+    }
+
+    .detail-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .label {
+      color: #8d9bbd;
+      flex-shrink: 0;
+    }
+
+    .value {
+      color: #d9e3ff;
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .inventory-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      font-size: 0.82em;
+      color: #c7d1ee;
+      max-height: 120px;
+      overflow: auto;
+    }
+
+    .inventory-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 4px 0;
+      border-bottom: 1px dashed rgba(201, 164, 92, 0.16);
+    }
+
+    .inventory-list li:last-child {
+      border-bottom: none;
+    }
+
+    .party-empty {
+      text-align: center;
+      color: #8d9bbd;
+      font-size: 0.84em;
+      padding: 18px 8px;
+    }
+
+    .party-member {
+      background: rgba(0, 0, 0, 0.26);
+      border: 1px solid rgba(201, 164, 92, 0.2);
+      border-radius: 4px;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
+
+    .member-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-size: 0.83em;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .member-name {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .member-meta {
+      color: #b4c4ea;
+      font-size: 0.8em;
+    }
+
+    .affinity-wrap {
+      margin-top: 5px;
+      margin-bottom: 6px;
+    }
+
+    .affinity-head {
+      display: flex;
+      justify-content: space-between;
+      color: #8d9bbd;
+      font-size: 0.78em;
+      margin-bottom: 2px;
+    }
+
+    .affinity-track {
+      position: relative;
+      height: 7px;
+      border-radius: 4px;
+      background: #101522;
+      overflow: hidden;
+      border: 1px solid rgba(201, 164, 92, 0.22);
+    }
+
+    .affinity-mid {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 1px;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.45);
+      transform: translateX(-50%);
+      z-index: 2;
+    }
+
+    .affinity-neg,
+    .affinity-pos {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .affinity-neg {
+      right: 50%;
+      background: linear-gradient(90deg, #ff7272, #f7768e);
+    }
+
+    .affinity-pos {
+      left: 50%;
+      background: linear-gradient(90deg, #7aa2f7, #7dcfff);
+    }
+
+    .member-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8em;
+      color: #c8d4f4;
+    }
+
+    .love-mark {
+      font-size: 0.86em;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    .fatigue-mark {
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .fatigue-fresh {
+      color: #7dffca;
+    }
+
+    .fatigue-normal {
+      color: #7dcfff;
+    }
+
+    .fatigue-caution {
+      color: #ffca76;
+    }
+
+    .fatigue-danger {
+      color: #ff7b9c;
+    }
+
+    .tab-nav {
+      margin-top: 6px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      border: 1px solid rgba(201, 164, 92, 0.35);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .tab-btn {
+      border: none;
+      padding: 8px 6px;
+      background: rgba(15, 20, 35, 0.8);
+      color: #8d9bbd;
+      font-size: 0.8em;
+      cursor: pointer;
+      font-family: inherit;
+      border-right: 1px solid rgba(201, 164, 92, 0.2);
+    }
+
+    .tab-btn:last-child {
+      border-right: none;
+    }
+
+    .tab-btn.active {
+      color: #1a1a2e;
+      background: linear-gradient(180deg, #d6b777, #c9a45c);
+      font-weight: 700;
+    }
+
+    .status-line {
+      margin-top: 6px;
+      font-size: 0.74em;
+      color: #7c88a9;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="compact-status">
+    <div id="summary-trigger" class="summary-line">
+      <div class="summary-main">
+        <span class="summary-name" id="sum-name">{{user}}</span>
+        <span class="summary-lv" id="sum-level">Lv.1</span>
+        <span class="summary-sdp" id="sum-sdp">SDP 0</span>
+      </div>
+      <span id="sum-arrow" class="summary-arrow">▼</span>
+    </div>
+
+    <div id="panel" class="panel">
+      <div id="tab-status" class="tab-pane active">
+        <div class="detail-box">
+          <p class="section-title">Current Status</p>
+          <div class="detail-row"><span class="label">코스튬</span><span class="value" id="v-costume">-</span></div>
+          <div class="detail-row"><span class="label">임무 상태</span><span class="value" id="v-mission-state">-</span></div>
+          <div class="detail-row"><span class="label">임무 월드</span><span class="value" id="v-mission-world">-</span></div>
+          <div class="detail-row"><span class="label">임무 요약</span><span class="value" id="v-mission-summary">-</span></div>
+        </div>
+
+        <div class="detail-box">
+          <p class="section-title">Inventory</p>
+          <ul id="inventory-list" class="inventory-list"></ul>
+          <div id="inventory-empty" class="party-empty" style="display:none;">인벤토리가 비어 있습니다.</div>
+        </div>
+      </div>
+
+      <div id="tab-party" class="tab-pane">
+        <div id="party-list"></div>
+        <div id="party-empty" class="party-empty">현재 파티원이 없습니다.</div>
+      </div>
+
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="status">상태</button>
+        <button class="tab-btn" data-tab="party">파티 정보</button>
+      </div>
+      <div id="sync-state" class="status-line">동기화 대기</div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var uiState = {
+        expanded: false,
+        activeTab: 'status',
+        api: null,
+        busy: false,
+      };
+
+      function $(id) {
+        return document.getElementById(id);
+      }
+
+      function classEmoji(clazz) {
+        if (clazz === 'tank') return '🛡️';
+        if (clazz === 'dps') return '⚔️';
+        if (clazz === 'heal') return '✨';
+        if (clazz === 'support') return '🌿';
+        return '💎';
+      }
+
+      function normalizeClass(raw) {
+        var value = String(raw || '').trim().toLowerCase();
+        if (value === 'tank') return 'tank';
+        if (value === 'dps') return 'dps';
+        if (value === 'heal' || value === 'healer') return 'heal';
+        if (value === 'support') return 'support';
+        return 'allRound';
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function fatigueView(fatigue) {
+        var v = clamp(Number(fatigue || 0), 0, 100);
+        if (v <= 30) return { text: '상쾌 😌 ' + v + '%', cls: 'fatigue-fresh' };
+        if (v <= 50) return { text: '보통 🙂 ' + v + '%', cls: 'fatigue-normal' };
+        if (v <= 80) return { text: '주의 😓 ' + v + '%', cls: 'fatigue-caution' };
+        return { text: '위험 🥵 ' + v + '%', cls: 'fatigue-danger' };
+      }
+
+      function loveView(loveLevel) {
+        var v = Number(loveLevel || 0);
+        if (v > 0) return '❤️'.repeat(Math.min(5, v));
+        if (v < 0) return '💔'.repeat(Math.min(5, Math.abs(v)));
+        return '-';
+      }
+
+      function getPartyMembers(snapshot) {
+        var user = (snapshot && snapshot.stat && snapshot.stat.User) || {};
+        var slots = user.PartySlots || {};
+        var slotData = user.PartySlotData || {};
+        var list = [];
+        ['Slot1', 'Slot2', 'Slot3'].forEach(function (slot) {
+          var partnerId = String(slots[slot] || '').trim();
+          var data = slotData[slot];
+          if (!partnerId || !data || data === '') return;
+          list.push({
+            slot: slot,
+            id: partnerId,
+            name: data.Name || partnerId,
+            level: Number(data.Level || 1),
+            grade: String(data.Grade || 'D'),
+            clazz: normalizeClass(data.Class),
+            job: String(data.Job || 'Unknown'),
+            affinity: Number(data.Affinity || 0),
+            loveLevel: Number(data.LoveLevel || 0),
+            fatigue: Number(data.Fatigue || 0),
+          });
+        });
+        return list;
+      }
+
+      function activateTab(tab) {
+        uiState.activeTab = tab;
+        $('tab-status').classList.toggle('active', tab === 'status');
+        $('tab-party').classList.toggle('active', tab === 'party');
+        document.querySelectorAll('.tab-btn').forEach(function (btn) {
+          btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+        });
+      }
+
+      function setExpanded(expanded) {
+        uiState.expanded = expanded;
+        $('panel').classList.toggle('active', expanded);
+        $('sum-arrow').textContent = expanded ? '▲' : '▼';
+      }
+
+      function renderSummary(snapshot) {
+        var user = (snapshot && snapshot.stat && snapshot.stat.User) || {};
+        $('sum-level').textContent = 'Lv.' + Number(user.Level || 1);
+        $('sum-sdp').textContent = 'SDP ' + Number(user.SDP || (snapshot ? snapshot.sdp : 0)).toLocaleString();
+      }
+
+      function renderStatusTab(snapshot) {
+        var user = (snapshot && snapshot.stat && snapshot.stat.User) || {};
+        var mission = (snapshot && snapshot.stat && snapshot.stat.Mission) || {};
+
+        $('v-costume').textContent = user.Costume || '기본 코스튬';
+
+        if (mission.OnMission) {
+          $('v-mission-state').textContent = '진행 중 (' + (mission.MissionGrade || 'D') + ' / ' + (mission.MissionType || 'normal') + ')';
+          $('v-mission-world').textContent = mission.WorldName || '스타더스트 호텔';
+          $('v-mission-summary').textContent = mission.WorldSummaryAndObjective || '임무 진행 중';
+        } else {
+          $('v-mission-state').textContent = '대기중';
+          $('v-mission-world').textContent = '스타더스트 호텔';
+          $('v-mission-summary').textContent = '임무 없음';
+        }
+
+        var inventory = user.Inventory || {};
+        var items = Object.keys(inventory)
+          .map(function (key) {
+            var item = inventory[key] || {};
+            return {
+              id: key,
+              desc: String(item.Description || key),
+              qty: Number(item.Quantity || 0),
+            };
+          })
+          .filter(function (item) { return item.qty > 0; })
+          .sort(function (a, b) { return a.desc.localeCompare(b.desc); });
+
+        $('inventory-list').innerHTML = items
+          .map(function (item) {
+            return '<li><span>' + item.desc + '</span><span>x' + item.qty + '</span></li>';
+          })
+          .join('');
+
+        $('inventory-empty').style.display = items.length === 0 ? 'block' : 'none';
+
+        $('sync-state').textContent =
+          'Lv.' + Number(user.Level || 1) +
+          ' | 파티 ' + Number(snapshot ? snapshot.inPartyCount : 0) + '/3 | 동기화 ' + new Date().toLocaleTimeString();
+      }
+
+      function renderPartyTab(snapshot) {
+        var party = getPartyMembers(snapshot);
+        var list = $('party-list');
+
+        if (party.length === 0) {
+          list.innerHTML = '';
+          $('party-empty').style.display = 'block';
+          return;
+        }
+
+        $('party-empty').style.display = 'none';
+
+        list.innerHTML = party
+          .map(function (m) {
+            var affinity = clamp(Number(m.affinity || 0), -99, 99);
+            var negWidth = affinity < 0 ? Math.round((Math.abs(affinity) / 100) * 50) : 0;
+            var posWidth = affinity > 0 ? Math.round((Math.abs(affinity) / 100) * 50) : 0;
+            var fatigue = fatigueView(m.fatigue);
+            var love = loveView(m.loveLevel);
+            var classLabel = classEmoji(m.clazz) + ' ' + m.clazz;
+
+            return (
+              '<div class="party-member">' +
+                '<div class="member-top">' +
+                  '<span class="member-name">' + m.name + '</span>' +
+                  '<span class="member-meta">Lv.' + m.level + ' | ' + m.grade + ' | ' + classLabel + ' | ' + m.job + '</span>' +
+                '</div>' +
+                '<div class="affinity-wrap">' +
+                  '<div class="affinity-head"><span>호감도</span><span>' + affinity + '</span></div>' +
+                  '<div class="affinity-track">' +
+                    '<div class="affinity-mid"></div>' +
+                    '<div class="affinity-neg" style="width:' + negWidth + '%"></div>' +
+                    '<div class="affinity-pos" style="width:' + posWidth + '%"></div>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="member-bottom">' +
+                  '<span class="love-mark">러브 ' + love + '</span>' +
+                  '<span class="fatigue-mark ' + fatigue.cls + '">' + fatigue.text + '</span>' +
+                '</div>' +
+              '</div>'
+            );
+          })
+          .join('');
+      }
+
+      async function refreshUI() {
+        if (!uiState.api) return;
+        try {
+          var snapshot = await uiState.api.getSnapshot();
+          renderSummary(snapshot);
+          renderStatusTab(snapshot);
+          renderPartyTab(snapshot);
+        } catch (error) {
+          $('sync-state').textContent = '동기화 실패';
+          var msg = error instanceof Error ? error.message : String(error);
+          if (window.toastr && window.toastr.error) window.toastr.error(msg);
+        }
+      }
+
+      async function waitForApi() {
+        for (var i = 0; i < 30; i += 1) {
+          var api = (window.top && window.top.SDH) || window.SDH;
+          if (api) return api;
+          await new Promise(function (resolve) { setTimeout(resolve, 200); });
+        }
+        return null;
+      }
+
+      function bindEvents() {
+        $('summary-trigger').addEventListener('click', function () {
+          setExpanded(!uiState.expanded);
+        });
+
+        document.querySelectorAll('.tab-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            activateTab(btn.getAttribute('data-tab'));
+          });
+        });
+      }
+
+      async function init() {
+        bindEvents();
+        activateTab('status');
+        setExpanded(false);
+
+        if (typeof window.waitGlobalInitialized === 'function') {
+          try {
+            await window.waitGlobalInitialized('Mvu');
+          } catch {
+            // ignore
+          }
+        }
+
+        uiState.api = await waitForApi();
+        if (!uiState.api) {
+          $('sync-state').textContent = 'SDH API 연결 실패';
+          return;
+        }
+
+        await refreshUI();
+
+        setInterval(function () {
+          if (!uiState.busy) refreshUI();
+        }, 3000);
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>

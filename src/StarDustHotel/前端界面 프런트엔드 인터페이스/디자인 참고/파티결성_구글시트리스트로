@@ -1,0 +1,223 @@
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* [Design] '상태창 초기버전' 스타일 계승 */
+    .status-card {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 2px solid #c9a45c;
+      border-radius: 8px;
+      color: #e0e0e0;
+      padding: 20px;
+      box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.6),
+        inset 0 0 20px rgba(201, 164, 92, 0.1);
+      font-family: 'Cinzel', serif;
+      position: relative;
+      max-width: 500px;
+      margin: 10px auto;
+    }
+
+    /* 장식용 코너 (Decoration) */
+    .status-card::before,
+    .status-card::after {
+      content: '';
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      border: 2px solid #c9a45c;
+      transition: all 0.3s ease;
+    }
+    .status-card::before {
+      top: 5px;
+      left: 5px;
+      border-right: 0;
+      border-bottom: 0;
+    }
+    .status-card::after {
+      bottom: 5px;
+      right: 5px;
+      border-left: 0;
+      border-top: 0;
+    }
+
+    .header-main {
+      text-align: center;
+      color: #c9a45c;
+      font-size: 1.5em;
+      letter-spacing: 3px;
+      border-bottom: 2px double #c9a45c;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+    }
+
+    /* 섹션 스타일 (프론트엔드제작 간단 참고) */
+    .party-section {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(201, 164, 92, 0.2);
+      margin-bottom: 15px;
+      padding: 15px;
+      border-radius: 4px;
+    }
+
+    .member-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .name-label {
+      font-size: 1.2em;
+      color: #fff;
+      font-weight: bold;
+    }
+    .detail-label {
+      color: #c9a45c;
+      font-size: 0.9em;
+    }
+
+    /* 버튼 레이아웃 */
+    .button-group {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .p-btn {
+      background: rgba(26, 26, 46, 0.9);
+      border: 1px solid #c9a45c;
+      color: #c9a45c;
+      padding: 8px 4px;
+      font-size: 11px;
+      cursor: pointer;
+      font-family: 'Cinzel', serif;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .p-btn:hover {
+      background: #c9a45c;
+      color: #1a1a2e;
+      box-shadow: 0 0 10px rgba(201, 164, 92, 0.4);
+    }
+
+    .btn-full {
+      grid-column: span 4;
+      border-color: #fff;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* 호감도 아이콘 */
+    .heart-icon {
+      color: #ff4d4d;
+      margin-right: 5px;
+    }
+  </style>
+
+  <script type="module">
+    // 🔴 중요: 여기에 본인의 구글 시트 웹 게시(CSV) 주소를 입력하세요.
+    const CSV_URL =
+      'https://docs.google.com/spreadsheets/d/e/2PACX-1vSdry-hV27O_JXqmUwQRutCz2KHl5D1GMvJQj9zZJlj6iGxQdZQBnaAoD0umlD6hpSWbbdK8Ap-_QFA/pub?gid=0&single=true&output=csv';
+
+    async function init() {
+      // MVU 프레임워크 초기화 대기
+      if (typeof waitGlobalInitialized !== 'undefined') {
+        await waitGlobalInitialized('Mvu');
+      }
+
+      // 전역 함수 등록 (버튼 클릭용)
+      window.recruitMember = async function (slotId, pos) {
+        try {
+          toastr.info(`Searching for a worthy companion...`);
+
+          const response = await fetch(CSV_URL);
+          const csvText = await response.text();
+          const [header, ...rows] = csvText.split('\n').map(r => r.split(','));
+
+          const headers = header.map(h => h.trim());
+          const data = rows
+            .filter(r => r.length > 1)
+            .map(row => {
+              let obj = {};
+              headers.forEach((h, i) => (obj[h] = row[i]?.trim()));
+              return obj;
+            });
+
+          const pool = pos === 'any' ? data : data.filter(m => m['포지션'] === pos);
+
+          if (pool.length === 0) {
+            toastr.warning('No candidates matched your request.');
+            return;
+          }
+
+          const picked = pool[Math.floor(Math.random() * pool.length)];
+
+          // MVU 데이터 업데이트
+          const mid = typeof getCurrentMessageId !== 'undefined' ? getCurrentMessageId() : 0;
+          const current = Mvu.getMvuData({ type: 'message', message_id: mid });
+          const updated = JSON.parse(JSON.stringify(current));
+
+          if (!updated.stat_data) updated.stat_data = {};
+          updated.stat_data[`파티원${slotId}`] = {
+            이름: picked['이름'],
+            포지션: picked['포지션'],
+            직업: picked['직업'],
+            레벨: Number(picked['레벨']) || 1,
+            호감도: 0,
+            love_level: 0,
+          };
+
+          await Mvu.replaceMvuData(updated, { type: 'message', message_id: mid });
+
+          // UI 업데이트 (jQuery 스타일 활용)
+          $(`#s${slotId}-name`).text(picked['이름']);
+          $(`#s${slotId}-detail`).text(`${picked['직업']} | Lv.${picked['레벨']}`);
+
+          toastr.success(`[${picked['포지션']}] ${picked['이름']} joined!`);
+        } catch (e) {
+          console.error(e);
+          toastr.error('Database Connection Failed.');
+        }
+      };
+    }
+
+    // 초기화 실행
+    $(document).ready(() => {
+      if (typeof errorCatched !== 'undefined') {
+        errorCatched(init)();
+      } else {
+        init();
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <div class="status-card">
+    <div class="header-main">PARTY FORMATION</div>
+
+    <script>
+      // JS로 반복 생성하여 코드 간소화
+      for (let i = 1; i <= 3; i++) {
+        document.write(`
+                    <div class="party-section">
+                        <div class="member-header">
+                            <span class="name-label">SLOT ${i}: <span id="s${i}-name" style="color:#fff;">Empty</span></span>
+                            <span id="s${i}-detail" class="detail-label">-</span>
+                        </div>
+                        <div class="button-group">
+                            <button class="p-btn btn-full" onclick="recruitMember(${i}, 'any')">🎲 COMPLETE RANDOM SUMMON</button>
+                            <button class="p-btn" onclick="recruitMember(${i}, '탱커')">🛡️ TANK</button>
+                            <button class="p-btn" onclick="recruitMember(${i}, '딜러')">⚔️ DPS</button>
+                            <button class="p-btn" onclick="recruitMember(${i}, '힐러')">✨ HEAL</button>
+                            <button class="p-btn" onclick="recruitMember(${i}, '만능')">💎 ALL-Rounder</button>
+                        </div>
+                    </div>
+                `);
+      }
+    </script>
+  </div>
+</body>

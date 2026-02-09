@@ -1,0 +1,118 @@
+---
+变量更新规则:
+  User:
+    Level:
+      type: number
+      range: 1+
+      check:
+        - 사용자의 성장/훈련/임무 성과가 명확할 때만 증가
+        - 급격한 점프 레벨업은 특수 이벤트에서만 허용
+    Costume:
+      check:
+        - 환복, 손상, 위장, 의전 상황에서만 변경
+    SDP:
+      type: number
+      range: 0+
+      check:
+        - SDP(Stardust Piece)는 화폐이므로 미션 보상/구매/판매/벌금 이벤트에 맞춰 증감
+        - 가챠 소환 시 소모 처리 후 남은 값을 반영
+        - 소수점 없이 정수로 유지
+    Inventory:
+      type: |-
+        {
+          [itemId: string]: {
+            Description: string;
+            Quantity: number;
+          }
+        }
+      check:
+        - 획득/소모/분실/거래 시 Quantity 갱신
+        - Quantity가 0 이하면 해당 아이템 삭제
+    PartySlots:
+      type: |-
+        {
+          Slot1: string;
+          Slot2: string;
+          Slot3: string;
+        }
+      check:
+        - 최대 3명 슬롯 유지
+        - 슬롯 ID 중복 금지
+        - 파티 편성/해제는 UI 또는 스크립트 조작을 우선
+    PartySlotData:
+      type: |-
+        {
+          Slot1: '' | {
+            PartnerId: string;
+            Name: string;
+            Level: number;
+            Grade: string;
+            Class: string;
+            Job: string;
+            Affinity: number;
+            LoveLevel: number;
+            Fatigue: number;
+            Alive: boolean;
+          };
+          Slot2: '' | {
+            PartnerId: string;
+            Name: string;
+            Level: number;
+            Grade: string;
+            Class: string;
+            Job: string;
+            Affinity: number;
+            LoveLevel: number;
+            Fatigue: number;
+            Alive: boolean;
+          };
+          Slot3: '' | {
+            PartnerId: string;
+            Name: string;
+            Level: number;
+            Grade: string;
+            Class: string;
+            Job: string;
+            Affinity: number;
+            LoveLevel: number;
+            Fatigue: number;
+            Alive: boolean;
+          };
+        }
+      check:
+        - 파티에 편성된 슬롯 데이터만 변경 가능
+        - Affinity가 100 도달 시 LoveLevel +1, Affinity는 0으로 리셋
+        - Affinity가 -100 도달 시 LoveLevel -1, Affinity는 0으로 리셋
+        - Fatigue는 0~100 범위를 유지
+    _OwnedPartnerCount:
+      check:
+        - readonly, 스크립트가 chat 변수 DB 기준으로 자동 동기화
+  Mission:
+    OnMission:
+      type: boolean
+      check:
+        - 임무 시작 시 true, 종료/중단 시 false
+    MissionType:
+      type: normal | eros
+      check:
+        - OnMission=true 일 때만 의미 있는 값으로 갱신
+    MissionGrade:
+      type: S | A | B | C | D
+      check:
+        - 임무 난이도/위험도 변화가 있을 때 갱신
+    WorldName:
+      check:
+        - OnMission=false 이면 반드시 '스타더스트 호텔'
+        - OnMission=true 이면 현재 임무 월드명 반영
+    WorldSummaryAndObjective:
+      check:
+        - OnMission=false 이면 반드시 '대기중'
+        - OnMission=true 이면 월드 개요 + 핵심 목적을 1~2문장으로 유지
+
+  说明:
+    ChatVarDB:
+      value: sdh.partnerDb (chat 변수)
+      check:
+        - 파트너 전체 상태(Level/Affinity/LoveLevel/Fatigue/Alive/InParty)는 chat 변수 DB에 저장
+        - 비파티 파트너는 LLM이 업데이트하지 않으며 스크립트가 값 보존
+        - 가챠 등록/파티 편성/해제/프로필 키 설정은 스크립트 또는 인터페이스가 처리

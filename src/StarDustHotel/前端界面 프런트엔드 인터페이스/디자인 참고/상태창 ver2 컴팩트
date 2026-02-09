@@ -1,0 +1,163 @@
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* [Design] 초압축형 레이아웃 */
+        .compact-status {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid #c9a45c;
+            border-radius: 4px;
+            color: #e0e0e0;
+            padding: 8px 12px;
+            font-family: 'Cinzel', serif;
+            max-width: 500px;
+            margin: 5px auto;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 플레이어 요약 라인 (한 줄 배치) */
+        .summary-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+
+        .player-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .gold-val { color: #ffd700; } /* 골드 전용 황금색 */
+
+        /* 펼쳐지는 상세 영역 */
+        .party-dropdown {
+            display: none;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(201, 164, 92, 0.3);
+        }
+        .party-dropdown.active { display: block; }
+
+        .m-detail-row {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            border-radius: 3px;
+            font-size: 0.85em;
+        }
+
+        .m-top-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        /* 하트(Love Level) 컨테이너 */
+        .love-hearts { color: #ff4d4d; font-size: 0.9em; letter-spacing: -1px; }
+
+        /* 컴팩트 게이지바 */
+        .mini-gauge {
+            height: 3px;
+            background: #333;
+            border-radius: 1px;
+            overflow: hidden;
+        }
+        .mini-fill { height: 100%; background: #ff4d4d; transition: width 0.4s ease; }
+    </style>
+
+    <script type="module">
+        const posMap = { '만능': '💎', '탱커': '🛡️', '딜러': '⚔️', '힐러': '✨' };
+
+        async function refreshUI() {
+            const currentVars = getVariables({type: 'message'});
+            const stats = _.get(currentVars, 'stat_data', {});
+
+            // 1. 플레이어 요약 (한 줄)
+            const p = _.get(stats, '플레이어', {});
+            $('#sum-lv').text(`Lv.${p.레벨 || 1}`);
+            $('#sum-pos').text(posMap[p.포지션] || '💎');
+            $('#sum-job').text(p.직업 || '모험가');
+            $('#sum-gold').text(`${(p.소지_골드 || 0).toLocaleString()} G`);
+
+            // 2. 파티원 상세
+            for (let i = 1; i <= 3; i++) {
+                const m = _.get(stats, `파티원${i}`);
+                const $row = $(`#m-row-${i}`);
+
+                if (m && m.이름 !== '이름 없음') {
+                    $row.find('.m-name').text(`${m.이름} (Lv.${m.레벨})`);
+                    $row.find('.m-job-pos').text(`${posMap[m.포지션] || '💎'} ${m.직업}`);
+                    
+                    // Love Level 하트 개수 표시
+                    const heartCount = Math.max(0, m.love_level || 0);
+                    $row.find('.love-hearts').text('♥️'.repeat(heartCount));
+                    
+                    // 게이지
+                    $row.find('.mini-fill').css('width', `${m.호감도 || 0}%`);
+                    $row.show();
+                } else {
+                    $row.hide();
+                }
+            }
+        }
+
+        async function init() {
+            await waitGlobalInitialized('Mvu');
+            
+            // 실시간 업데이트 감시
+            eventOn(Mvu.events.VARIABLE_UPDATE_ENDED, refreshUI);
+            refreshUI();
+
+            // 펼치기 토글
+            $('#summary-trigger').on('click', function() {
+                const $drop = $('.party-dropdown');
+                $drop.toggleClass('active');
+                $(this).find('.arrow').text($drop.hasClass('active') ? '▲' : '▼');
+            });
+        }
+
+        $(document).ready(() => {
+            if (typeof errorCatched !== 'undefined') errorCatched(init)();
+            else init();
+        });
+    </script>
+</head>
+
+<div class="compact-status">
+    <div class="summary-line" id="summary-trigger">
+        <div class="player-info">
+            <span id="sum-lv">Lv.1</span>
+            <span id="sum-pos">💎</span>
+            <span id="sum-job">모험가</span>
+            <span id="sum-gold" class="gold-val">0 G</span>
+        </div>
+        <span class="arrow" style="color:#c9a45c;">▼</span>
+    </div>
+
+    <div class="party-dropdown">
+        <div id="m-row-1" class="m-detail-row">
+            <div class="m-top-info">
+                <span><span class="m-name" style="color:#fff; font-weight:bold;">-</span> <span class="m-job-pos" style="margin-left:5px; color:#aaa;">-</span></span>
+                <span class="love-hearts"></span>
+            </div>
+            <div class="mini-gauge"><div class="mini-fill"></div></div>
+        </div>
+        <div id="m-row-2" class="m-detail-row">
+            <div class="m-top-info">
+                <span><span class="m-name" style="color:#fff; font-weight:bold;">-</span> <span class="m-job-pos" style="margin-left:5px; color:#aaa;">-</span></span>
+                <span class="love-hearts"></span>
+            </div>
+            <div class="mini-gauge"><div class="mini-fill"></div></div>
+        </div>
+        <div id="m-row-3" class="m-detail-row">
+            <div class="m-top-info">
+                <span><span class="m-name" style="color:#fff; font-weight:bold;">-</span> <span class="m-job-pos" style="margin-left:5px; color:#aaa;">-</span></span>
+                <span class="love-hearts"></span>
+            </div>
+            <div class="mini-gauge"><div class="mini-fill"></div></div>
+        </div>
+    </div>
+</div>

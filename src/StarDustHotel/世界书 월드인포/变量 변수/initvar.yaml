@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=../../schema.json
+# initvar 작성 전 `pnpm watch`로 schema.json 생성/검증 권장
+User:
+  Level: 1
+  Costume: 기본 제복
+  SDP: 120
+  Inventory:
+    starter_pack:
+      Description: 기본 임무 키트. 소형 회복제와 데이터 키가 들어있다.
+      Quantity: 1
+    credit_chip:
+      Description: 스타더스트 호텔 공용 결제 칩
+      Quantity: 3
+  PartySlots:
+    Slot1: luna
+    Slot2: ''
+    Slot3: ''
+  PartySlotData:
+    Slot1:
+      PartnerId: luna
+      Name: Luna
+      Level: 1
+      Grade: B
+      Class: support
+      Job: 정보 중개인
+      Affinity: 15
+      LoveLevel: 0
+      Fatigue: 20
+      Alive: true
+    Slot2: ''
+    Slot3: ''
+  _OwnedPartnerCount: 2
+Mission:
+  OnMission: false
+  MissionType: normal
+  MissionGrade: D
+  WorldName: 스타더스트 호텔
+  WorldSummaryAndObjective: 대기중

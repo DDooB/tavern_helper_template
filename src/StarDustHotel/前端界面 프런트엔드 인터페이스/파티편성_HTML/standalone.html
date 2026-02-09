@@ -1,0 +1,633 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SDH Party Formation</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 10px;
+      background: transparent;
+      font-family: 'Cinzel', 'Pretendard', 'Noto Sans KR', sans-serif;
+      color: #e0e0e0;
+    }
+
+    .party-shell {
+      max-width: 760px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 2px solid #c9a45c;
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow:
+        0 6px 18px rgba(0, 0, 0, 0.5),
+        inset 0 0 14px rgba(201, 164, 92, 0.08);
+    }
+
+    .header {
+      text-align: center;
+      color: #c9a45c;
+      font-size: 1.18rem;
+      letter-spacing: 0.08em;
+      border-bottom: 2px double #c9a45c;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .subline {
+      margin-top: 4px;
+      color: #8d9bbd;
+      font-size: 0.78rem;
+      letter-spacing: 0;
+    }
+
+    .mission-banner {
+      border: 1px solid #3f4a72;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.28);
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      font-size: 0.82rem;
+      color: #b8c7f2;
+    }
+
+    .mission-banner.locked {
+      border-color: #f7768e;
+      background: rgba(247, 118, 142, 0.12);
+      color: #ffccd7;
+    }
+
+    .slot-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .slot-card {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(201, 164, 92, 0.25);
+      border-radius: 6px;
+      padding: 9px;
+    }
+
+    .slot-title {
+      color: #c9a45c;
+      font-size: 0.84rem;
+      font-weight: 700;
+      margin: 0 0 5px 0;
+    }
+
+    .slot-name {
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin: 0;
+      min-height: 1.2em;
+      word-break: break-word;
+    }
+
+    .slot-meta {
+      color: #9aa5ce;
+      font-size: 0.78rem;
+      margin: 4px 0 8px 0;
+      min-height: 2.2em;
+      line-height: 1.4;
+    }
+
+    .select {
+      width: 100%;
+      min-height: 32px;
+      border: 1px solid #4f5a82;
+      border-radius: 4px;
+      background: rgba(10, 14, 26, 0.92);
+      color: #d8e2ff;
+      font-size: 0.8rem;
+      padding: 5px 6px;
+      font-family: inherit;
+    }
+
+    .btn-row {
+      margin-top: 7px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .btn {
+      border: 1px solid #c9a45c;
+      border-radius: 4px;
+      background: rgba(24, 28, 46, 0.95);
+      color: #d8be84;
+      font-family: inherit;
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 6px 5px;
+      cursor: pointer;
+    }
+
+    .btn.assign:hover {
+      background: #c9a45c;
+      color: #1a1a2e;
+    }
+
+    .btn.clear {
+      border-color: #f7768e;
+      color: #ffb7c8;
+    }
+
+    .btn.clear:hover {
+      background: #f7768e;
+      color: #1a1a2e;
+    }
+
+    .btn:disabled,
+    .select:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .list-panel {
+      background: rgba(0, 0, 0, 0.26);
+      border: 1px solid rgba(201, 164, 92, 0.25);
+      border-radius: 6px;
+      padding: 9px;
+    }
+
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .list-title {
+      color: #c9a45c;
+      font-size: 0.84rem;
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .list-filter {
+      min-width: 170px;
+      max-width: 220px;
+      width: 100%;
+      min-height: 30px;
+      border: 1px solid #4f5a82;
+      border-radius: 4px;
+      background: rgba(10, 14, 26, 0.92);
+      color: #d8e2ff;
+      font-size: 0.78rem;
+      padding: 5px 6px;
+      font-family: inherit;
+    }
+
+    .owned-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 250px;
+      overflow: auto;
+    }
+
+    .owned-item {
+      border: 1px solid rgba(201, 164, 92, 0.2);
+      border-radius: 4px;
+      padding: 7px;
+      margin-bottom: 6px;
+      background: rgba(12, 16, 29, 0.78);
+    }
+
+    .owned-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .owned-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+    }
+
+    .owned-name {
+      color: #fff;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .owned-meta {
+      color: #9fb0da;
+      font-size: 0.76rem;
+    }
+
+    .mini-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
+    }
+
+    .mini-btn {
+      border: 1px solid #5075c9;
+      border-radius: 3px;
+      background: rgba(122, 162, 247, 0.15);
+      color: #bdd2ff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 5px 2px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .mini-btn:hover {
+      background: #7aa2f7;
+      color: #11152a;
+    }
+
+    .empty {
+      text-align: center;
+      color: #8d9bbd;
+      font-size: 0.82rem;
+      padding: 14px 8px;
+    }
+
+    .status-line {
+      margin-top: 8px;
+      text-align: right;
+      color: #7e8cb0;
+      font-size: 0.74rem;
+      min-height: 1em;
+    }
+
+    @media (max-width: 860px) {
+      .slot-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .list-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .list-filter {
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="party-shell">
+    <header class="header">
+      PARTY FORMATION
+      <div class="subline">미션 중이 아닐 때만 편성 가능</div>
+    </header>
+
+    <div id="mission-banner" class="mission-banner">미션 상태 확인 중...</div>
+
+    <div class="slot-grid" id="slot-grid"></div>
+
+    <div class="list-panel">
+      <div class="list-header">
+        <p class="list-title">보유 파트너 목록</p>
+        <input id="owned-filter" class="list-filter" placeholder="이름/직업/등급 검색" />
+      </div>
+      <ul id="owned-list" class="owned-list"></ul>
+      <div id="owned-empty" class="empty" style="display:none;">보유 파트너가 없습니다.</div>
+    </div>
+
+    <div id="status-line" class="status-line">동기화 대기</div>
+  </section>
+
+  <script>
+    (function () {
+      var SLOTS = ['Slot1', 'Slot2', 'Slot3'];
+      var state = {
+        busy: false,
+        api: null,
+        snapshot: null,
+        missionLocked: false,
+        missionText: '',
+        filter: '',
+      };
+
+      function $(id) {
+        return document.getElementById(id);
+      }
+
+      function esc(input) {
+        return String(input)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+
+      function classEmoji(raw) {
+        var value = String(raw || '').trim().toLowerCase();
+        if (value === 'tank') return '🛡️';
+        if (value === 'dps') return '⚔️';
+        if (value === 'heal' || value === 'healer') return '✨';
+        if (value === 'support') return '🌿';
+        return '💎';
+      }
+
+      function toast(type, message) {
+        var topWin = window.top || window;
+        if (topWin.toastr && typeof topWin.toastr[type] === 'function') {
+          topWin.toastr[type](message);
+        }
+      }
+
+      function updateMissionLock(snapshot) {
+        var mission = (snapshot && snapshot.stat && snapshot.stat.Mission) || {};
+        state.missionLocked = Boolean(mission.OnMission);
+        if (state.missionLocked) {
+          var title = mission.WorldName || '스타더스트 호텔';
+          var grade = mission.MissionGrade || 'D';
+          state.missionText = '미션 진행 중 [' + grade + '] ' + title + ' - 편성 잠금';
+        } else {
+          state.missionText = '대기중 - 파티 편성 가능';
+        }
+      }
+
+      function findOwnedById(id) {
+        if (!state.snapshot) return null;
+        var list = state.snapshot.ownedPartners || [];
+        for (var i = 0; i < list.length; i += 1) {
+          if (list[i].Id === id) return list[i];
+        }
+        return null;
+      }
+
+      function renderMissionBanner() {
+        var banner = $('mission-banner');
+        banner.textContent = state.missionText;
+        banner.classList.toggle('locked', state.missionLocked);
+      }
+
+      function renderSlotCards() {
+        var host = $('slot-grid');
+        if (!state.snapshot) {
+          host.innerHTML = '';
+          return;
+        }
+
+        var slots = state.snapshot.partySlots || { Slot1: '', Slot2: '', Slot3: '' };
+        var owned = state.snapshot.ownedPartners || [];
+
+        host.innerHTML = SLOTS
+          .map(function (slot) {
+            var partnerId = String(slots[slot] || '');
+            var partner = findOwnedById(partnerId);
+            var name = partner ? partner.Name : 'Empty';
+            var meta = partner
+              ? 'Lv.' + partner.Level + ' | ' + partner.Grade + ' | ' + classEmoji(partner.Class) + ' ' + partner.Class + ' | ' + partner.Job
+              : '배치된 파트너 없음';
+
+            var options = owned
+              .map(function (item) {
+                var selected = item.Id === partnerId ? ' selected' : '';
+                return '<option value="' + esc(item.Id) + '"' + selected + '>' +
+                  esc(item.Name) + ' / ' + esc(item.Grade) + ' / ' + esc(item.Class) +
+                '</option>';
+              })
+              .join('');
+
+            return (
+              '<article class="slot-card" data-slot="' + slot + '">' +
+                '<p class="slot-title">' + slot.toUpperCase() + '</p>' +
+                '<p class="slot-name">' + esc(name) + '</p>' +
+                '<p class="slot-meta">' + esc(meta) + '</p>' +
+                '<select class="select slot-select" data-slot="' + slot + '">' +
+                  '<option value="">-- 보유 파트너 선택 --</option>' +
+                  options +
+                '</select>' +
+                '<div class="btn-row">' +
+                  '<button class="btn assign" data-action="assign" data-slot="' + slot + '">선택 파트너 배치</button>' +
+                  '<button class="btn clear" data-action="clear" data-slot="' + slot + '">슬롯 해제</button>' +
+                '</div>' +
+              '</article>'
+            );
+          })
+          .join('');
+
+        applyLockState();
+      }
+
+      function filteredOwnedList() {
+        if (!state.snapshot) return [];
+        var keyword = state.filter.trim().toLowerCase();
+        var list = state.snapshot.ownedPartners || [];
+        if (!keyword) return list;
+
+        return list.filter(function (item) {
+          var text = [item.Name, item.Grade, item.Class, item.Job].join(' ').toLowerCase();
+          return text.indexOf(keyword) !== -1;
+        });
+      }
+
+      function renderOwnedList() {
+        var listNode = $('owned-list');
+        var items = filteredOwnedList();
+
+        if (items.length === 0) {
+          listNode.innerHTML = '';
+          $('owned-empty').style.display = 'block';
+          return;
+        }
+
+        $('owned-empty').style.display = 'none';
+
+        listNode.innerHTML = items
+          .map(function (item) {
+            var partyMark = item.InParty ? ' (현재 파티)' : '';
+            return (
+              '<li class="owned-item">' +
+                '<div class="owned-top">' +
+                  '<span class="owned-name">' + esc(item.Name) + partyMark + '</span>' +
+                  '<span class="owned-meta">Lv.' + item.Level + ' | ' + esc(item.Grade) + ' | ' + classEmoji(item.Class) + ' ' + esc(item.Class) + ' | ' + esc(item.Job) + '</span>' +
+                '</div>' +
+                '<div class="mini-row">' +
+                  '<button class="mini-btn" data-action="quick-assign" data-slot="Slot1" data-partner="' + esc(item.Id) + '">Slot1 배치</button>' +
+                  '<button class="mini-btn" data-action="quick-assign" data-slot="Slot2" data-partner="' + esc(item.Id) + '">Slot2 배치</button>' +
+                  '<button class="mini-btn" data-action="quick-assign" data-slot="Slot3" data-partner="' + esc(item.Id) + '">Slot3 배치</button>' +
+                '</div>' +
+              '</li>'
+            );
+          })
+          .join('');
+
+        applyLockState();
+      }
+
+      function applyLockState() {
+        var disabled = state.busy || state.missionLocked;
+        document.querySelectorAll('button[data-action]').forEach(function (btn) {
+          btn.disabled = disabled;
+        });
+        document.querySelectorAll('.slot-select').forEach(function (sel) {
+          sel.disabled = disabled;
+        });
+      }
+
+      async function refreshSnapshot() {
+        if (!state.api) return;
+        state.snapshot = await state.api.getSnapshot();
+      }
+
+      function renderAll() {
+        updateMissionLock(state.snapshot);
+        renderMissionBanner();
+        renderSlotCards();
+        renderOwnedList();
+
+        var now = new Date().toLocaleTimeString();
+        $('status-line').textContent =
+          (state.missionLocked ? '편성 잠금' : '편성 가능') +
+          ' | 보유 ' + ((state.snapshot && state.snapshot.ownedCount) || 0) +
+          ' | 파티 ' + ((state.snapshot && state.snapshot.inPartyCount) || 0) + '/3' +
+          ' | ' + now;
+      }
+
+      async function runAction(task) {
+        if (state.busy) return;
+        state.busy = true;
+        applyLockState();
+        try {
+          await task();
+        } catch (error) {
+          var message = error instanceof Error ? error.message : String(error);
+          toast('error', message);
+        } finally {
+          state.busy = false;
+          applyLockState();
+        }
+      }
+
+      async function assignToSlot(slot, partnerId) {
+        if (!state.api) return;
+        if (state.missionLocked) {
+          toast('warning', '미션 진행 중에는 파티 편성을 변경할 수 없습니다.');
+          return;
+        }
+        if (!partnerId) {
+          toast('warning', '배치할 파트너를 선택하세요.');
+          return;
+        }
+
+        await runAction(async function () {
+          var ok = await state.api.addPartnerToParty(partnerId, slot);
+          if (!ok) {
+            toast('warning', '편성 실패');
+            return;
+          }
+          await refreshSnapshot();
+          renderAll();
+          toast('success', slot + ' 배치 완료');
+        });
+      }
+
+      async function clearSlot(slot) {
+        if (!state.api) return;
+        if (state.missionLocked) {
+          toast('warning', '미션 진행 중에는 파티 편성을 변경할 수 없습니다.');
+          return;
+        }
+
+        await runAction(async function () {
+          var ok = await state.api.removePartnerFromParty(slot);
+          if (!ok) {
+            toast('warning', '해제할 파티원이 없습니다.');
+            return;
+          }
+          await refreshSnapshot();
+          renderAll();
+          toast('success', slot + ' 해제 완료');
+        });
+      }
+
+      function bindEvents() {
+        $('slot-grid').addEventListener('click', function (event) {
+          var target = event.target;
+          if (!(target instanceof HTMLButtonElement)) return;
+
+          var action = target.getAttribute('data-action') || '';
+          var slot = target.getAttribute('data-slot') || '';
+          if (!slot) return;
+
+          if (action === 'assign') {
+            var select = document.querySelector('.slot-select[data-slot="' + slot + '"]');
+            if (!(select instanceof HTMLSelectElement)) return;
+            assignToSlot(slot, select.value);
+            return;
+          }
+
+          if (action === 'clear') {
+            clearSlot(slot);
+            return;
+          }
+        });
+
+        $('owned-list').addEventListener('click', function (event) {
+          var target = event.target;
+          if (!(target instanceof HTMLButtonElement)) return;
+
+          var action = target.getAttribute('data-action') || '';
+          if (action !== 'quick-assign') return;
+
+          var slot = target.getAttribute('data-slot') || '';
+          var partnerId = target.getAttribute('data-partner') || '';
+          assignToSlot(slot, partnerId);
+        });
+
+        $('owned-filter').addEventListener('input', function () {
+          state.filter = String(($('owned-filter').value || '')).trim();
+          renderOwnedList();
+        });
+      }
+
+      async function waitForApi() {
+        for (var i = 0; i < 30; i += 1) {
+          var api = (window.top && window.top.SDH) || window.SDH;
+          if (api) return api;
+          await new Promise(function (resolve) { setTimeout(resolve, 200); });
+        }
+        return null;
+      }
+
+      async function init() {
+        if (typeof window.waitGlobalInitialized === 'function') {
+          try {
+            await window.waitGlobalInitialized('Mvu');
+          } catch {
+            // ignore
+          }
+        }
+
+        state.api = await waitForApi();
+        if (!state.api) {
+          $('mission-banner').classList.add('locked');
+          $('mission-banner').textContent = 'SDH API 연결 실패 - 파트너 시스템 스크립트를 먼저 로드하세요.';
+          return;
+        }
+
+        bindEvents();
+        await refreshSnapshot();
+        renderAll();
+
+        setInterval(async function () {
+          if (state.busy) return;
+          await refreshSnapshot();
+          renderAll();
+        }, 3000);
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+---
+变量输出格式:
+  rule:
+    - 다음 답변의 끝에서 변수 분석과 업데이트 명령을 반드시 함께 출력
+    - 업데이트 명령은 JSON Patch(RFC 6902) 형태의 유효한 JSON 배열이어야 함
+    - 지원 op: replace, delta, insert, remove, move
+    - `_`로 시작하는 필드명은 readonly로 간주하고 수정 금지
+  format: |-
+    <UpdateVariable>
+    <Analysis>$(IN KOREAN, 80자 이내)</Analysis>
+    <JSONPatch>
+    [
+      { "op": "replace", "path": "${/path/to/variable}", "value": "${new_value}" },
+      { "op": "delta", "path": "${/path/to/number/variable}", "value": "${positive_or_negative_delta}" },
+      { "op": "insert", "path": "${/path/to/object/new_key}", "value": "${new_value}" },
+      { "op": "remove", "path": "${/path/to/object/key}" },
+      { "op": "move", "from": "${/path/from}", "to": "${/path/to}" }
+    ]
+    </JSONPatch>
+    </UpdateVariable>
