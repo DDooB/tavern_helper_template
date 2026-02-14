@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "User": {
+      "type": "object",
+      "properties": {
+        "Level": {
+          "type": "number"
+        },
+        "Costume": {
+          "type": "string"
+        },
+        "SDP": {
+          "type": "number"
+        },
+        "Inventory": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "description": "Item ID"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "Description": {
+                "type": "string"
+              },
+              "Quantity": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "Description",
+              "Quantity"
+            ]
+          }
+        },
+        "PartySlots": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "enum": [
+              "Slot1",
+              "Slot2",
+              "Slot3"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string"
+          },
+          "required": [
+            "Slot1",
+            "Slot2",
+            "Slot3"
+          ]
+        },
+        "PartySlotData": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "enum": [
+              "Slot1",
+              "Slot2",
+              "Slot3"
+            ]
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": ""
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "PartnerId": {
+                    "type": "string"
+                  },
+                  "Name": {
+                    "type": "string"
+                  },
+                  "Level": {
+                    "type": "number"
+                  },
+                  "Grade": {
+                    "type": "string"
+                  },
+                  "Class": {
+                    "type": "string"
+                  },
+                  "Job": {
+                    "type": "string"
+                  },
+                  "Affinity": {
+                    "type": "number"
+                  },
+                  "LoveLevel": {
+                    "type": "number"
+                  },
+                  "Fatigue": {
+                    "type": "number"
+                  },
+                  "Alive": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "PartnerId",
+                  "Name",
+                  "Level",
+                  "Grade",
+                  "Class",
+                  "Job",
+                  "Affinity",
+                  "LoveLevel",
+                  "Fatigue",
+                  "Alive"
+                ]
+              }
+            ]
+          },
+          "required": [
+            "Slot1",
+            "Slot2",
+            "Slot3"
+          ]
+        },
+        "_OwnedPartnerCount": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "Level",
+        "Costume",
+        "SDP",
+        "Inventory",
+        "PartySlots",
+        "PartySlotData",
+        "_OwnedPartnerCount"
+      ]
+    },
+    "Mission": {
+      "type": "object",
+      "properties": {
+        "OnMission": {
+          "type": "boolean"
+        },
+        "MissionType": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "eros"
+          ]
+        },
+        "MissionGrade": {
+          "type": "string",
+          "enum": [
+            "S",
+            "A",
+            "B",
+            "C",
+            "D"
+          ]
+        },
+        "WorldName": {
+          "type": "string"
+        },
+        "WorldSummaryAndObjective": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "OnMission",
+        "MissionType",
+        "MissionGrade",
+        "WorldName",
+        "WorldSummaryAndObjective"
+      ]
+    }
+  },
+  "required": [
+    "User",
+    "Mission"
+  ]
+}
